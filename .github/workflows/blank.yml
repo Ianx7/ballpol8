@@ -1,0 +1,24 @@
+name: Validate 8Ball Config
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Verifica que el archivo de configuración exista
+      - name: Check for mod config
+        run: |
+          if [ -f "mod_config.yaml" ]; then
+            echo "✅ Configuración del mod encontrada."
+            cat mod_config.yaml
+          else
+            echo "❌ Faltan los archivos del mod."
+            exit 1
+          fi
