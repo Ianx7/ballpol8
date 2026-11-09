@@ -1,0 +1,110 @@
+# 8Ball Pool Mod Menu - Advanced Hybrid Config
+# Formato: YAML + Inyección Objective-C Nativa
+
+name: "8Ball Pro Mods"
+bundleId: "com.miniclip.eightballpool"
+version: "1.5"
+
+# Configuración del Panel Visual (UI)
+menu:
+  title: "🎱 MOD MENU"
+  position: "top-right"
+  width: 240
+  height: 300
+  bgColor: "#1a1a1a"
+  borderColor: "#00ffcc"
+  textColor: "#ffffff"
+  
+# Opciones del Menú con Lógica Objective-C Integrada
+options:
+  - name: "Long Line Guideline"
+    key: "longLine"
+    type: toggle
+    default: false
+    
+    # Código Objective-C que se inyecta al activar
+    onCode: |
+      // Inyección directa de memoria para extender la línea guía
+      void (*setLineLength)(void*, float) = dlsym(RTLD_DEFAULT, "_ZN10GameLogic15SetGuidelineLenEf");
+      if (setLineLength) {
+          setLineLength(NULL, 9999.0f); // Longitud máxima
+      } else {
+          NSLog(@"[Mod] Long Line: Intentando vía JS...");
+          // Fallback a JavaScript si no hay símbolo directo
+          [self runJS:@"game.drawLongLine = true;"];
+      }
+      
+    offCode: |
+      // Restaurar línea normal
+      void (*resetLine)(void*) = dlsym(RTLD_DEFAULT, "_ZN10GameLogic9ResetLineEv");
+      if (resetLine) {
+          resetLine(NULL);
+      }
+
+  - name: "Anti-Ban Protection"
+    key: "antiBan"
+    type: toggle
+    default: true
+    
+    onCode: |
+      // Ocultar indicadores de mod comunes
+      [self hideModIndicators];
+      NSLog(@"[Mod] Anti-Ban: Protección activa");
+      
+    offCode: |
+      NSLog(@"[Mod] Anti-Ban: Desactivado");
+
+  - name: "Infinite Money"
+    key: "infiniteMoney"
+    type: slider
+    min: 1000
+    max: 999999
+    default: 50000
+    
+    onCode: |
+      // Modificar valor de moneda en memoria
+      int* creditsPtr = (int*)dlsym(RTLD_DEFAULT, "_ZL10gCredits");
+      if (creditsPtr) {
+          *creditsPtr = self.currentValue;
+          NSLog(@"[Mod] Dinero actualizado a: %d", *creditsPtr);
+      }
+
+# Lógica Interna del Gestos (Triple Tap) en Objective-C
+gestures:
+  - type: "triple-tap"
+    action: "toggle-menu"
+    code: |
+      // Contador de toques integrado
+      static NSInteger tapCount = 0;
+      NSTimer *tapTimer = [NSTimer scheduledTimerWithTimeInterval:0.3 
+                                                           target:self 
+                                                         selector:@selector(resetTapCount) 
+                                                         userInfo:nil 
+                                                          repeats:NO];
+      tapCount++;
+      if (tapCount == 3) {
+          [self toggleMenuVisibility];
+          tapCount = 0;
+      }
+
+# Funciones Auxiliares en Objective-C
+functions:
+  - name: "hideModIndicators"
+    code: |
+      // Oculta overlays de debug
+      [[[[UIApplication sharedApplication] keyWindow] subviews] enumerateObjectsUsingBlock:^(UIView *obj, NSUInteger idx, BOOL *stop) {
+          if ([obj isKindOfClass:[UILabel class]] || [obj isKindOfClass:[UIButton class]]) {
+              if ([obj.accessibilityLabel containsString:@"mod"]) {
+                  obj.hidden = YES;
+              }
+          }
+      }];
+
+  - name: "runJS"
+    parameters: ["script"]
+    code: |
+      // Ejecuta JavaScript en el WebView interno del juego
+      WKWebView *webView = [[UIApplication sharedApplication].keyWindow rootViewController].view.subviews.firstObject;
+      if ([webView isKindOfClass:[WKWebView class]]) {
+          [webView evaluateJavaScript:self.script completionHandler:nil];
+      }
