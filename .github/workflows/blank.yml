@@ -1,24 +1,28 @@
-name: Validate 8Ball Config
+# mod_config.yaml
+name: "8Ball Pool Mod"
+version: "1.0"
+target_bundle: "com.miniclip.eightballpool"
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+options:
+  - id: long_line
+    name: "Long Line Guideline"
+    type: toggle
+    default: false
+    description: "Extiende la línea de tiro para tiros perfectos."
 
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      # Verifica que el archivo de configuración exista
-      - name: Check for mod config
-        run: |
-          if [ -f "mod_config.yaml" ]; then
-            echo "✅ Configuración del mod encontrada."
-            cat mod_config.yaml
-          else
-            echo "❌ Faltan los archivos del mod."
-            exit 1
-          fi
+  - id: anti_ban
+    name: "Anti-Ban Protection"
+    type: toggle
+    default: true
+    description: "Oculta los logs de detección del servidor."
+
+  - id: infinite_money
+    name: "Infinite Money"
+    type: toggle
+    default: false
+    description: "Dinero infinito al entrar a una partida."
+
+settings:
+  menu_color: "#00ffcc"
+  trigger: triple_tap
+  position: top_right
